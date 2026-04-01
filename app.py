@@ -37,7 +37,7 @@ def download_youtube_audio(url: str):
     #Extracting the title without downloading
     with yt_dlp.YoutubeDL({'quiet':True, 'no_warnings': True}) as ydl:
         info = ydl.extract_info(url, download = False)
-        title = info.get('title', 'youtube_video')
+        video_title = info.get('title', 'youtube_video')
 
 
     #creating a persistent temporary file
@@ -71,7 +71,7 @@ def download_youtube_audio(url: str):
                 if f.endswith((".mp3",".m4a", ".wav")):
                     final_path = os.path.join(dir_name, f)
                     break
-        return final_path
+        return final_path, video_title
     except Exception as e:
         print(f"Download Failed: {e}")
         raise
@@ -133,8 +133,8 @@ with tab2:
     if youtube_url and st.button("Transcribe YouTube Video", type = "primary"):
         with st.spinner("Downloading audio from YouTube..."):
             try:
-                audio_path = download_youtube_audio(youtube_url)
-                st.success("✅ Audio downloaded successfully")
+                audio_path, video_title = download_youtube_audio(youtube_url)
+                st.success(f"✅ Audio downloaded successfully -- Title: {video_title}")
             except Exception as e:
                 st.error(f"Download Failed: {e}")
                 st.stop()
@@ -159,14 +159,14 @@ with tab2:
                     st.download_button(
                         label = "📥 Download as .txt",
                         data = transcription,
-                        file_name = "youtube_transcription.txt",
+                        file_name = f"{video_title}.txt",
                         mime = 'text/plain'
                     )
                 with col2:
                     st.download_button(
                         label = "📥 Download as .srt",
                         data = transcription,
-                        file_name = "youtube_transcription.srt",
+                        file_name = f"{video_title}.srt",
                         mime = "text/plain"
                     )
             finally:
