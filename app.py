@@ -31,3 +31,41 @@ def load_whisper_model():
 
 pipe = load_whisper_model()
 
+# ========================= Youtube Downloader ===========================================================================
+
+def download_youtube_audio(url: str):
+    #creating a persistent temporary file
+    tempfile = tempfile.NamedTemporaryFile(suffix = ".mp3", delete = False)
+    temp_path = tempfile.name
+    tempfile.close() #close so that yt_dlp can write to it
+
+    ydl_opts = {
+                'format':'bestaudio/best',
+                'outtmpl':temp_path.replace(".mp3", ".mp3"), #yt_dlp will add the extension
+                'postprocessors':[{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcode': 'mp3',
+                    'preferredquality': '192'
+                                  }],
+                'quiet': True,
+                'no_warnings': True
+     }
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+
+        #ydl normally saves as .mp3
+        final_path = temp_path if os.path.exists(temp_path) else temp_path.replace(".mp3", ".mp3")
+
+        if not os.path.exists(final_path):
+            #fallback: Look for any audio file in the location
+            dir_name = os.path.dirname(temp_path)
+            for f in os.listdir(dirname):
+                if f.endswith((".mp3",".m4a", ".wav")):
+                    final_path = os.path.join(dirname, f)
+                    break
+        return final_path
+    except Exception as e:
+        print(f"Download Failed: {e}")
+        raise
