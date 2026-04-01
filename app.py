@@ -34,6 +34,12 @@ pipe = load_whisper_model()
 # ========================= Youtube Downloader ===========================================================================
 
 def download_youtube_audio(url: str):
+    #Extracting the title without downloading
+    with yt_dlp.YoutubeDL({'quiet':True, 'no_warnings': True}) as ydl:
+        info = ydl.extract_info(url, download = False)
+        title = info.get('title', 'youtube_video')
+
+
     #creating a persistent temporary file
     temp_file = tempfile.NamedTemporaryFile(suffix = ".mp3", delete = False)
     temp_path = temp_file.name
@@ -50,7 +56,7 @@ def download_youtube_audio(url: str):
                 'quiet': True,
                 'no_warnings': True
      }
-
+     # Downloading to a tempfile
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
@@ -61,9 +67,9 @@ def download_youtube_audio(url: str):
         if not os.path.exists(final_path):
             #fallback: Look for any audio file in the location
             dir_name = os.path.dirname(temp_path)
-            for f in os.listdir(dirname):
+            for f in os.listdir(dir_name):
                 if f.endswith((".mp3",".m4a", ".wav")):
-                    final_path = os.path.join(dirname, f)
+                    final_path = os.path.join(dir_name, f)
                     break
         return final_path
     except Exception as e:
@@ -99,20 +105,23 @@ with tab1:
                     st.subheader("Transcription")
                     st.write(transcription)
 
+                    #base name of the uploaded txt file
+                    base_name = Path(uploaded_file.name).stem
+
                     #Download buttons
                     col1, col2 = st.columns(2)
                     with col1:
                         st.download_button(
                             label = "📥 Download as .txt",
                             data = transcription,
-                            file_name = "transcription.txt",
+                            file_name = f"{base_name}.txt",
                             mime = "text/plain"
                         )
                     with col2:
                         st.download_button(
                             label = "📥 Download as .srt",
                             data = transcription,
-                            file_name = "transcription.srt",
+                            file_name = f"{base_name}.srt",
                             mime = "application/x-subrip"
                         )
                 finally:
